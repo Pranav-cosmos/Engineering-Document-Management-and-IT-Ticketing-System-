@@ -3,32 +3,60 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 export default function Register() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
+    full_name: "",
+    role: "",
     email: "",
     password: "",
   });
+
   const [ui, setUi] = useState({
     error: "",
     busy: false,
   });
-  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
+
     setUi({
-      ...ui,
       error: "",
       busy: true,
     });
 
-    const { error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-    });
+    try {
+      // Create auth user
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
 
-    if (error) {
+      if (error) throw error;
+
+      const user = data.user;
+
+      if (!user) {
+        throw new Error("User creation failed.");
+      }
+
+      // Create profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert([
+          {
+            id: user.id,
+            full_name: formData.full_name,
+            role: formData.role,
+          },
+        ]);
+
+      if (profileError) throw profileError;
+
+      navigate("/dashboard");
+    } catch (err) {
       setUi({
-        error: error.message,
+        error: err.message,
         busy: false,
       });
       return;
@@ -38,35 +66,138 @@ export default function Register() {
       error: "",
       busy: false,
     });
-
-    navigate("/dashboard");
   }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-logo"><div className="logo-icon">E</div></div>
-        <h1>Create account</h1>
-        <p className="auth-subtitle">Get started with EDMS today</p>
+        <div className="auth-logo">
+          <div className="logo-icon">TASL</div>
+        </div>
 
-        {ui.error && <div className="auth-error">{ui.error}</div>}
+        <h1>Create Account</h1>
+        <p className="auth-subtitle">
+          Get started with EDMS today
+        </p>
+
+        {ui.error && (
+          <div className="auth-error">
+            {ui.error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
-            <label htmlFor="reg-email">Email</label>
-            <input id="reg-email" className="input" type="email" placeholder="you@company.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+            <label htmlFor="name">
+              Full Name
+            </label>
+
+            <input
+              id="name"
+              className="input"
+              type="text"
+              placeholder="Enter your full name"
+              value={formData.full_name}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  full_name: e.target.value,
+                })
+              }
+              required
+            />
           </div>
+
           <div className="input-group">
-            <label htmlFor="reg-password">Password</label>
-            <input id="reg-password" className="input" type="password" placeholder="Min 6 characters" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required minLength={6} />
+            <label htmlFor="role">
+              Role
+            </label>
+
+            <select
+              id="role"
+              className="input"
+              value={formData.role}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  role: e.target.value,
+                })
+              }
+              required
+            >
+              <option value="">
+                Select Role
+              </option>
+
+              <option value="Engineer">
+                Engineer
+              </option>
+
+              <option value="IT">
+                IT
+              </option>
+            </select>
           </div>
-          <button className="btn btn-primary" type="submit" disabled={ui.busy}>
-            {ui.busy ? "Creating..." : "Create Account"}
+
+          <div className="input-group">
+            <label htmlFor="email">
+              Email
+            </label>
+
+            <input
+              id="email"
+              className="input"
+              type="email"
+              placeholder="you@company.com"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  email: e.target.value,
+                })
+              }
+              required
+            />
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="password">
+              Password
+            </label>
+
+            <input
+              id="password"
+              className="input"
+              type="password"
+              placeholder="Minimum 6 characters"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  password: e.target.value,
+                })
+              }
+              minLength={6}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={ui.busy}
+          >
+            {ui.busy
+              ? "Creating..."
+              : "Create Account"}
           </button>
         </form>
 
         <div className="auth-switch">
-          Already have an account? <Link to="/">Sign in</Link>
+          Already have an account?{" "}
+          <Link to="/">
+            Sign In
+          </Link>
         </div>
       </div>
     </div>

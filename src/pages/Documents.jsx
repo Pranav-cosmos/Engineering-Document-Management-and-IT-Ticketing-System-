@@ -16,6 +16,8 @@ function Documents() {
   const [versionFile, setVersionFile] = useState(null);
   const [historyDoc, setHistoryDoc] = useState(null);
   const [versions, setVersions] = useState([]);
+  const [accessRole, setAccessRole] = useState("Engineer");
+  const [profile, setProfile] = useState(null);
 
   const editMeta = (doc) => {
     setEditingDoc(doc);
@@ -23,25 +25,59 @@ function Documents() {
     setDescription(doc.description);
   };
 
-  useEffect(() => { fetchDocuments(); }, []);
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    if (profile) {
+      fetchDocuments();
+    }
+  }, [profile]);
 
   function showToast(message, type = "success") {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }
 
+  async function fetchProfile() {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    setProfile(data);
+  }
+
   async function fetchDocuments() {
-    const { data, error } = await supabase
+    if (!profile) return;
+
+    console.log("Current Role:", profile.role);
+
+    let query = supabase
       .from("documents")
       .select("*")
       .order("created_at", { ascending: false });
 
+    if (profile.role !== "Admin") {
+      query = query.eq("access_role", profile.role);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.error(error);
-      showToast(error.message, "error");
-    } else {
-      setDocuments(data || []);
+      return;
     }
+
+    console.log("Filtered Docs:", data);
+
+    setDocuments(data || []);
     setLoading(false);
   }
 
@@ -99,7 +135,7 @@ function Documents() {
 
       const { error: insertError } = await supabase
         .from("documents")
-        .insert([{ title, description, file_url: filePath, uploaded_by: user.id, version: 1 }]);
+        .insert([{ title, description, file_url: filePath, uploaded_by: user.id, version: 1, access_role: accessRole }]);
 
       if (insertError) {
         console.error(insertError);
@@ -257,12 +293,24 @@ function Documents() {
           <form className="upload-form" onSubmit={addDocument}>
             <div className="input-group">
               <label htmlFor="doc-title">Title</label>
-              <input id="doc-title" className="input" placeholder="e.g. Bridge Load Analysis" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <input id="doc-title" className="input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
 
             <div className="input-group">
               <label htmlFor="doc-desc">Description</label>
               <input id="doc-desc" className="input" placeholder="Brief description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="access-role">Access Role</label>
+              <select className="input"
+                value={accessRole}
+                onChange={(e) => setAccessRole(e.target.value)}
+                required
+              >
+                <option value="Engineer">Engineer</option>
+                <option value="IT">IT</option>
+              </select>
             </div>
 
             <div
@@ -289,6 +337,8 @@ function Documents() {
             </div>
           </form>
         </div>
+
+
 
         {/* Add version section */}
         {
@@ -323,6 +373,8 @@ function Documents() {
             </div>
           )
         }
+
+
 
         {/* Edit Section */}
         {
@@ -428,7 +480,6 @@ function Documents() {
                     <p>{doc.description}</p>
                   </div>
                 )}
-
                 <div className="doc-card-meta">
                   <span className="badge">v{doc.version}</span>
                   <button className="btn btn-ghost btn-sm" onClick={() => setVersionDoc(doc)}>

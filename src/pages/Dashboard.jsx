@@ -8,12 +8,15 @@ export default function Dashboard() {
   const [docCount, setDocCount] = useState(0);
 
   useEffect(() => {
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
       setUser(session.user);
+
       supabase.from("documents").select("*", { count: "exact", head: true })
         .then(({ count }) => setDocCount(count || 0));
     });
+
   }, []);
 
   return (

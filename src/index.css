@@ -375,7 +375,7 @@ ul {
   padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 15px;
   transition: 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -396,6 +396,8 @@ ul {
   font-size: 0.85rem;
   color: var(--text-muted);
   line-height: 1.5;
+  margin: 5px;
+
 }
 
 .doc-card-meta {
