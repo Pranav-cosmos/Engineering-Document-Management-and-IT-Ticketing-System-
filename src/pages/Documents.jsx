@@ -57,8 +57,6 @@ function Documents() {
   async function fetchDocuments() {
     if (!profile) return;
 
-    console.log("Current Role:", profile.role);
-
     let query = supabase
       .from("documents")
       .select("*")
@@ -74,8 +72,6 @@ function Documents() {
       console.error(error);
       return;
     }
-
-    console.log("Filtered Docs:", data);
 
     setDocuments(data || []);
     setLoading(false);
@@ -338,127 +334,86 @@ function Documents() {
           </form>
         </div>
 
-
-
         {/* Add version section */}
-        {
-          versionDoc && (
-            <div className="upload-section" style={{ maxWidth: "50%" }}>
-              <h2>
-                Upload New Version
-              </h2>
+        {versionDoc && (
+          <div className="upload-section">
+            <h2>Upload New Version</h2>
+            <p>{versionDoc.title}</p>
 
-              <p>{versionDoc.title}</p>
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => setVersionFile(e.target.files[0])}
+            />
 
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setVersionFile(e.target.files[0])}
-              />
-
-              <button className="btn btn-ghost" style={{ margin: "10px" }}
-                onClick={uploadNewVersion}
-              >
-                Upload
-              </button>
-              <button
-                className="btn btn-ghost"
-                onClick={() => {
-                  setVersionDoc(null);
-                  setVersionFile(null);
-                }}
-              >
+            <div className="upload-actions">
+              <button className="btn btn-ghost" onClick={() => { setVersionDoc(null); setVersionFile(null); }}>
                 Cancel
               </button>
+              <button className="btn btn-primary" onClick={uploadNewVersion}>
+                Upload
+              </button>
             </div>
-          )
-        }
-
-
+          </div>
+        )}
 
         {/* Edit Section */}
-        {
-          editingDoc && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "white", margin: "20px", padding: "20px", borderRadius: 10 }}>
-              <input className="input"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+        {editingDoc && (
+          <div className="upload-section">
+            <h2>✏ Edit Document</h2>
 
-              <textarea className="input"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
+            <div className="upload-form">
+              <div className="input-group">
+                <label>Title</label>
+                <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
 
-              <button className="btn btn-primary" onClick={updateDocument}>
-                Save
-              </button>
+              <div className="input-group">
+                <label>Description</label>
+                <textarea className="input" value={description} onChange={(e) => setDescription(e.target.value)} />
+              </div>
+
+              <div className="upload-actions">
+                <button className="btn btn-ghost" onClick={() => setEditingDoc(null)}>
+                  Cancel
+                </button>
+                <button className="btn btn-primary" onClick={updateDocument}>
+                  Save
+                </button>
+              </div>
             </div>
-          )
-        }
+          </div>
+        )}
 
         {/* Version History */}
-        {
-          historyDoc && (
-            <div className="upload-section">
-              <h2>
-                📜 Version History — {historyDoc.title}
-              </h2>
+        {historyDoc && (
+          <div className="upload-section">
+            <h2>📜 Version History — {historyDoc.title}</h2>
+            <p className="doc-card-body">Current version: v{historyDoc.version}</p>
 
-              <p style={{ marginBottom: "12px", fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                Current version: v{historyDoc.version}
-              </p>
+            {versions.length === 0 ? (
+              <p className="doc-card-body">No previous versions</p>
+            ) : (
+              versions.map(version => (
+                <div key={version.id} className="doc-card-meta">
+                  <span className="badge">v{version.version_number}</span>
+                  <span>{new Date(version.created_at).toLocaleDateString()}</span>
+                  <button className="btn btn-ghost btn-sm" onClick={() => viewFile(version.file_url)}>👁 View</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => downloadFile(version.file_url, historyDoc.title + "_v" + version.version_number)}>⬇ Download</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => deleteVersion(version)}>🗑 Delete</button>
+                </div>
+              ))
+            )}
 
-              {versions.length === 0 ? (
-                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>No previous versions</p>
-              ) : (
-                versions.map(version => (
-                  <div key={version.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
-                    <span className="badge">v{version.version_number}</span>
-
-                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                      {new Date(version.created_at).toLocaleDateString()}
-                    </span>
-
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => viewFile(version.file_url)}
-                    >
-                      👁 View
-                    </button>
-
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => downloadFile(version.file_url, historyDoc.title + "_v" + version.version_number)}
-                    >
-                      ⬇ Download
-                    </button>
-
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => deleteVersion(version)}
-                    >
-                      🗑 Delete
-                    </button>
-                  </div>
-                ))
-              )}
-
-              <button
-                className="btn btn-ghost"
-                style={{ marginTop: "12px" }}
-                onClick={() => setHistoryDoc(null)}
-              >
-                Close
-              </button>
+            <div className="upload-actions">
+              <button className="btn btn-ghost" onClick={() => setHistoryDoc(null)}>Close</button>
             </div>
-          )
-        }
-
+          </div>
+        )}
 
         {/* Document List */}
         {loading ? (
-          <div className="loading-screen" style={{ minHeight: "200px" }}>
+          <div className="loading-screen">
             <div className="spinner" />
           </div>
         ) : documents.length === 0 ? (

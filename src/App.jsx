@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Tickets from "./pages/tickets";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -39,6 +40,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<ProtectedRoute user={user}><Dashboard /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute user={user}><Documents /></ProtectedRoute>} />
+        <Route path="/tickets" element={<ProtectedRoute user={user}><Tickets /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

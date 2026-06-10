@@ -4,15 +4,38 @@ import { useEffect, useState } from "react";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
-  const [email, setEmail] = useState("");
+  const [profile, setProfile] = useState(null);
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => data?.user && setEmail(data.user.email));
+    fetchProfile();
   }, []);
+
+  async function fetchProfile() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setProfile(data);
+  }
 
   const nav = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/documents", label: "Documents" },
+    { to: "/tickets", label: "Tickets" },
   ];
 
   return (
@@ -34,10 +57,10 @@ export default function Sidebar() {
 
       <div className="sidebar-footer">
         <div className="user-info">
-          <div className="avatar">{email ? email[0].toUpperCase() : "U"}</div>
+          <div className="avatar">{profile?.full_name ? profile.full_name[0].toUpperCase() : "U"}</div>
           <div>
-            <div className="user-label">Account</div>
-            <div className="user-email">{email || "..."}</div>
+            <div className="user-label">{profile?.full_name}</div>
+            <div className="user-email">{profile?.role}</div>
           </div>
         </div>
         <button className="btn btn-ghost btn-sm" style={{ width: "100%", marginTop: 8 }}

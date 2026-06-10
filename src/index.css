@@ -263,6 +263,11 @@ ul {
   font-size: 0.8rem;
 }
 
+.sidebar-toggle {
+  margin: 20px;
+
+}
+
 /* ---- Inputs ---- */
 
 .input,
@@ -390,6 +395,7 @@ ul {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-heading);
+  margin: 10px;
 }
 
 .doc-card-body p {
