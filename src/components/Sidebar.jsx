@@ -5,69 +5,73 @@ import { useEffect, useState } from "react";
 export default function Sidebar() {
   const { pathname } = useLocation();
   const [profile, setProfile] = useState(null);
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchProfile();
   }, []);
 
   async function fetchProfile() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setProfile(data);
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    if (data) setProfile(data);
   }
+
+  const canManageUsers = profile?.role === "Admin" || profile?.role === "IT";
 
   const nav = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/documents", label: "Documents" },
     { to: "/tickets", label: "Tickets" },
+    { to: "/audit-logs", label: "Audit Logs" },
+    ...(canManageUsers ? [{ to: "/users", label: "Users" }] : []),
   ];
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-icon">TASL</div>
-        <span>EDMS</span>
-      </div>
+    <>
 
-      <nav>
-        <ul>
-          {nav.map(l => (
-            <li key={l.to}>
-              <Link to={l.to} className={pathname === l.to ? "active" : ""}>{l.label}</Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <div className="sidebar-footer">
-        <div className="user-info">
-          <div className="avatar">{profile?.full_name ? profile.full_name[0].toUpperCase() : "U"}</div>
-          <div>
-            <div className="user-label">{profile?.full_name}</div>
-            <div className="user-email">{profile?.role}</div>
-          </div>
+      <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
+        <div className="sidebar-logo">
+          <div className="logo-icon">TASL</div>
+          <span>EDMS</span>
         </div>
-        <button className="btn btn-ghost btn-sm" style={{ width: "100%", marginTop: 8 }}
-          onClick={() => supabase.auth.signOut().then(() => window.location.href = "/")}>
-          Sign Out
-        </button>
-      </div>
-    </aside>
+
+        <nav>
+          <ul>
+            {nav.map((item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  className={pathname === item.to || pathname.startsWith(`${item.to}/`) ? "active" : ""}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="sidebar-footer">
+          <Link to="/profile" className="user-info" onClick={() => setIsOpen(false)}>
+            <div className="avatar">{profile?.full_name ? profile.full_name[0].toUpperCase() : "U"}</div>
+            <div>
+              <div className="user-label">{profile?.full_name || "User"}</div>
+              <div className="user-email">{profile?.role || "-"}</div>
+            </div>
+          </Link>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ width: "100%", marginTop: 8 }}
+            onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/"; })}
+          >
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {isOpen && <div className="sidebar-overlay" onClick={() => setIsOpen(false)} />}
+    </>
   );
 }

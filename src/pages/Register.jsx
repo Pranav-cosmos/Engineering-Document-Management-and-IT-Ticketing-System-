@@ -30,6 +30,12 @@ export default function Register() {
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            full_name: formData.full_name,
+            role: formData.role,
+          },
+        },
       });
 
       if (error) throw error;
@@ -40,10 +46,10 @@ export default function Register() {
         throw new Error("User creation failed.");
       }
 
-      // Create profile
+      // Create or update profile. A database trigger may already create this row.
       const { error: profileError } = await supabase
         .from("profiles")
-        .insert([
+        .upsert([
           {
             id: user.id,
             full_name: formData.full_name,

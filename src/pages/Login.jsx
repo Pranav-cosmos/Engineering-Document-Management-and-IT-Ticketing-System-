@@ -10,6 +10,7 @@ export default function Login() {
 
   const [ui, setUi] = useState({
     error: "",
+    message: "",
     busy: false
   });
   const navigate = useNavigate();
@@ -17,8 +18,8 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     setUi({
-      ...ui,
       error: "",
+      message: "",
       busy: true
     })
 
@@ -30,16 +31,36 @@ export default function Login() {
     if (error) {
       setUi({
         error: error.message,
+        message: "",
         busy: false
       });
+      return;
     }
 
     setUi({
       error: "",
+      message: "",
       busy: false,
     });
 
     navigate("/dashboard");
+  }
+
+  async function handlePasswordReset() {
+    if (!formData.email) {
+      setUi({ error: "Enter your email first.", message: "", busy: false });
+      return;
+    }
+
+    setUi({ error: "", message: "", busy: true });
+    const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+      redirectTo: window.location.origin,
+    });
+    setUi({
+      error: error?.message || "",
+      message: error ? "" : "Password reset email sent.",
+      busy: false,
+    });
   }
 
   return (
@@ -50,6 +71,7 @@ export default function Login() {
         <p className="auth-subtitle">Sign in to your EDMS account</p>
 
         {ui.error && <div className="auth-error">{ui.error}</div>}
+        {ui.message && <div className="auth-success">{ui.message}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
@@ -77,6 +99,11 @@ export default function Login() {
 
         <div className="auth-switch">
           Don't have an account? <Link to="/register">Create one</Link>
+        </div>
+        <div className="auth-switch">
+          <button className="link-button" type="button" onClick={handlePasswordReset} disabled={ui.busy}>
+            Forgot password?
+          </button>
         </div>
       </div>
     </div>
