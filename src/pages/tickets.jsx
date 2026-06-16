@@ -74,6 +74,8 @@ export default function Tickets() {
   // Filter by status for requests
   const [requestFilterStatus, setRequestFilterStatus] = useState("");
 
+  const [predictedCategory, setPredictedCategory] = useState("");
+
   // ── Helper: show a pop-up message ──────────────────────────────────────────
   function showToast(message, type = "success") {
     setToast({ message, type });
@@ -88,6 +90,30 @@ export default function Tickets() {
     fetchTickets();
     fetchRequests();
   }, []);
+
+  const predictCategory = async () => {
+    console.log(ticketForm);
+
+    const res = await fetch(
+      "http://127.0.0.1:8000/predict-category",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: ticketForm.title,
+          description: ticketForm.description,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    console.log(data);
+
+    setPredictedCategory(data.category);
+  };
 
   // ── Fetch the current user's profile ───────────────────────────────────────
   async function fetchProfile() {
@@ -445,7 +471,7 @@ export default function Tickets() {
 
                 {/* Category */}
                 <div className="input-group">
-                  <label>Category</label>
+                  <label>Category *</label>
                   <select
                     className="input"
                     value={editingTicket ? editTicketForm.category : ticketForm.category}
@@ -456,8 +482,9 @@ export default function Tickets() {
                         setTicketForm({ ...ticketForm, category: e.target.value });
                       }
                     }}
+                    required
                   >
-                    <option value="">Select (optional)</option>
+                    <option value="">Select</option>
                     {categories.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
@@ -525,7 +552,7 @@ export default function Tickets() {
                   <textarea
                     className="input"
                     rows={2}
-                    placeholder="How was it resolved?"
+                    placeholder="How can it be resolved?"
                     value={editingTicket ? editTicketForm.resolution : ticketForm.resolution}
                     onChange={(e) => {
                       if (editingTicket) {
@@ -555,6 +582,15 @@ export default function Tickets() {
                       </button>
                       <button className="btn btn-primary" type="submit">
                         Create Ticket
+                      </button>
+                      <button className="btn btn-primary"
+                        type="button"
+                        onClick={predictCategory}
+
+                      >
+                        <p>
+                          Suggested Category: {predictedCategory}
+                        </p>
                       </button>
                     </>
                   )}

@@ -62,8 +62,8 @@ export default function Sidebar() {
             </div>
           </Link>
           <button
-            className="btn btn-ghost btn-sm"
-            style={{ width: "100%", marginTop: 8 }}
+            className="btn btn-sm"
+            style={{ width: "100%", marginTop: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}
             onClick={() => supabase.auth.signOut().then(() => { window.location.href = "/"; })}
           >
             Sign Out
