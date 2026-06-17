@@ -1,0 +1,251 @@
+title,description,category
+VPN not working,Cannot connect to company VPN after password reset,Network
+Internet connection unstable,Frequent disconnections while working remotely,Network
+WiFi not connecting,Laptop cannot connect to office WiFi,Network
+Network drive inaccessible,Shared drive is not reachable,Network
+Slow internet speed,Internet performance is significantly degraded,Network
+DNS resolution failure,Unable to access websites by hostname,Network
+VPN authentication failed,VPN login rejected with authentication error,Network
+Network printer unreachable,Printer cannot be reached over network,Network
+LAN cable issue,Desktop loses network connection intermittently,Network
+Firewall blocking application,Required application traffic is blocked,Network
+VPN disconnects frequently,VPN session drops multiple times daily,Network
+Cannot map network drive,Drive mapping operation fails,Network
+Wireless access point issue,Users cannot connect through access point,Network
+Packet loss detected,Voice calls experience interruptions,Network
+Proxy server unavailable,Users cannot browse external websites,Network
+IP conflict detected,Two devices sharing same IP address,Network
+Router rebooting constantly,Branch office gateway unstable,Network
+BGP route flapping,Core network routing unstable,Network
+VLAN configuration error,Port placed in wrong network segment,Network
+Switch port dead,Wall jack no longer provides connectivity,Network
+Guest WiFi captive portal broken,Users cannot accept terms to connect,Network
+High latency on WAN,Ping times to cloud services over 300ms,Network
+VPN split tunnel broken,Local traffic going through tunnel,Network
+DHCP pool exhausted,No IPs available for new devices,Network
+Cannot ping server,Internal host completely unreachable,Network
+Subnet mask incorrect,Host cannot talk to gateway,Network
+Fiber link down,Uplink between floors disconnected,Network
+QoS misconfigured,Voice traffic not prioritized over downloads,Network
+Load balancer routing failing,Traffic not distributed to web nodes,Network
+DNS cache poisoned,Internal domains resolving to wrong IPs,Network
+Site-to-Site VPN down,Branch office disconnected from HQ,Network
+MAC address filtering block,New laptop blocked by switch port,Network
+Network loop detected,Spanning tree blocking ports,Network
+Traceroute drops,Traffic failing at specific ISP hop,Network
+SSL VPN gateway unreachable,Web portal for remote access down,Network
+SD-WAN edge offline,Appliance reports loss of connectivity,Network
+Intrusion prevention dropping traffic,Legitimate API calls blocked,Network
+Proxy authentication popup,Constant prompts for credentials,Network
+IPv6 routing issue,Clients cannot reach external IPv6 hosts,Network
+RADIUS server timeout,WiFi authentication failing,Network
+Port forwarding broken,External requests not reaching internal server,Network
+Network drive slow,Copying files takes hours,Network
+Cisco AnyConnect profile missing,Client lacks server list,Network
+Meraki AP offline,Cloud dashboard shows dead access point,Network
+Jitter during VoIP call,Audio quality extremely poor,Network
+Bandwidth saturated,Network monitoring shows 100% utilization,Network
+ARP table poisoning warning,Security alert regarding MAC spoofing,Network
+Failed to acquire IP address,Client stuck on APIPA 169.254.x.x,Network
+Default gateway unreachable,Cannot route out of local subnet,Network
+WPA3 compatibility issue,Old scanner cannot join secure WiFi,Network
+Email not sending,Emails remain stuck in outbox,Email
+Unable to receive emails,Inbox is not receiving new messages,Email
+Outlook keeps crashing,Outlook closes unexpectedly during use,Email
+Mailbox full,User cannot receive additional emails,Email
+Spam filter issue,Legitimate emails are marked as spam,Email
+Email attachment blocked,Unable to send attachment via email,Email
+Shared mailbox inaccessible,Access to shared mailbox denied,Email
+Calendar sync issue,Outlook calendar not syncing correctly,Email
+Email delivery delayed,Messages take hours to arrive,Email
+Distribution list not working,Emails sent to group are not delivered,Email
+Mailbox synchronization failed,Emails not syncing across devices,Email
+Outlook search not working,Unable to find emails using search,Email
+Email signature missing,Configured signature disappeared,Email
+Meeting invitations not received,Calendar invites do not arrive,Email
+Auto reply not functioning,Out of office replies not sent,Email
+Phishing warning on safe email,Internal email flagged as dangerous,Email
+Cannot open encrypted email,User lacks key to decrypt message,Email
+Archiving policy failing,Old emails not moving to online archive,Email
+Deleted folder won't empty,Cannot permanently delete trash,Email
+Sent items missing,Emails sent via mobile don't show on desktop,Email
+Recall message failed,Attempt to unsend email was unsuccessful,Email
+Resource mailbox conflict,Meeting room double booked,Email
+Exchange server disconnected,Outlook shows working offline,Email
+SMTP relay error,Application cannot send automated emails,Email
+DKIM signature invalid,Emails sent to clients bouncing,Email
+DMARC policy block,External system rejected our domain email,Email
+Cannot add delegate,Failed to give assistant calendar access,Email
+Contact list corrupted,Address book shows garbled names,Email
+Rules not running automatically,Inbox filters must be run manually,Email
+Cannot forward meeting,Forward button disabled on invite,Email
+Email stuck in drafts,Unable to send saved draft,Email
+Attachments opening in wrong app,PDFs in Outlook open in Edge,Email
+Large attachment bounce,File exceeds 25MB limit,Email
+Mobile email sync stopped,iOS Mail app not updating,Email
+Cannot view free/busy time,Colleague schedules show as hashed lines,Email
+Mailbox rule loop,Auto-forwards creating infinite loop,Email
+Shared calendar missing,Cannot see team vacation calendar,Email
+IMAP connection refused,Third-party app cannot read inbox,Email
+POP3 download error,Legacy system cannot pull emails,Email
+BCC field hidden,User cannot blind copy recipients,Email
+Read receipts not returning,Not receiving confirmation of read emails,Email
+Outlook profile corrupted,Need to rebuild OST file,Email
+Mimecast plugin missing,Spam reporting tool disappeared,Email
+Public folder inaccessible,Cannot post to company-wide board,Email
+Email body rendering weird,HTML formatting broken in messages,Email
+Quarantine release failed,Cannot release valid email from filter,Email
+Reply-all storm,Company-wide email chain crashing clients,Email
+Cannot attach from OneDrive,Cloud attachments link failing,Email
+Ghost emails,Notifications show unread but inbox is empty,Email
+Categories disappeared,Color coding removed from emails,Email
+Laptop not starting,Power button does not start device,Hardware
+Laptop overheating,System becomes very hot during operation,Hardware
+Battery draining quickly,Laptop battery discharges unusually fast,Hardware
+Keyboard not working,Several keys are unresponsive,Hardware
+Monitor flickering,External monitor display is unstable,Hardware
+Docking station issue,Laptop fails to connect through dock,Hardware
+Hard disk failure,System reports disk errors,Hardware
+Printer paper jam,Office printer reports paper jam error,Hardware
+Mouse malfunctioning,Mouse pointer moves erratically,Hardware
+Webcam not detected,Video conferencing camera unavailable,Hardware
+Laptop screen cracked,Physical damage to display panel,Hardware
+Printer not printing,Print jobs remain in queue,Hardware
+Headset not detected,Audio device unavailable during meetings,Hardware
+USB port not working,Peripheral devices not recognized,Hardware
+Laptop fan noisy,Cooling fan produces excessive noise,Hardware
+Secondary monitor blank,Second screen receives no signal,Hardware
+RAM error on boot,System beeps and shows memory error,Hardware
+Trackpad unresponsive,Laptop touchpad ignores gestures,Hardware
+Bluetooth mouse disconnects,Wireless mouse loses connection randomly,Hardware
+Scanner glass broken,MFP scanner is physically damaged,Hardware
+Power adapter frayed,Charger cable is exposed and unsafe,Hardware
+Motherboard failure,System is completely dead and won't post,Hardware
+Microphone static,Audio input has heavy background noise,Hardware
+Keys sticky,Keyboard requires cleaning after spill,Hardware
+Docking station power loss,Dock does not charge laptop,Hardware
+Projector bulb dead,Meeting room projector won't display,Hardware
+Audio jack broken,Headphone port is physically damaged,Hardware
+External drive clicking,USB hard drive makes mechanical noise,Hardware
+Smartcard reader faulty,Built-in card reader fails to scan,Hardware
+Battery swelling,Laptop chassis is bulging,Hardware
+Monitor stand broken,Display cannot be mounted,Hardware
+Printer out of toner,Device needs cartridge replacement,Hardware
+Headset microphone broken,Users cannot hear me on calls,Hardware
+Touchscreen unresponsive,Laptop display ignores touch input,Hardware
+USB hub failure,Multiple devices drop connection,Hardware
+Desktop making grinding noise,Internal fan or drive sounds bad,Hardware
+HDMI port damaged,Cannot plug in external display,Hardware
+Webcam blurry,Camera lens is scratched or out of focus,Hardware
+Ethernet port broken,Cable will not click into place,Hardware
+Laptop hinge broken,Screen cannot stay upright,Hardware
+Keyboard missing keycaps,Several letters fell off,Hardware
+Printer smudging ink,Printed pages are dirty,Hardware
+UPS battery alarm,Uninterruptible power supply is beeping,Hardware
+Graphics card artifacting,Screen shows strange colors,Hardware
+Wireless adapter hardware failure,Network card not found in device manager,Hardware
+Biometric scanner fail,Fingerprint reader does not work,Hardware
+Stylus pen broken,Digital pen fails to write,Hardware
+KVM switch dead,Cannot toggle between computers,Hardware
+Speaker volume low,Internal speakers barely audible,Hardware
+Laptop chassis cracked,Physical drop damaged outer shell,Hardware
+Application crashes on startup,Software closes immediately after launch,Software
+Software installation failed,Required software cannot be installed,Software
+ERP application freezing,System becomes unresponsive during use,Software
+Blue screen error,Operating system crashes unexpectedly,Software
+Browser keeps crashing,Web browser closes during browsing,Software
+Excel file corruption,Spreadsheet cannot be opened properly,Software
+PDF viewer not opening,PDF files fail to launch,Software
+Antivirus update failed,Security software cannot update definitions,Software
+Software license expired,Application reports invalid license,Software
+Operating system update failed,Windows update installation unsuccessful,Software
+Teams application crashes,Microsoft Teams closes unexpectedly,Software
+Unable to install updates,Software updates fail repeatedly,Software
+CRM application error,System displays unexpected error message,Software
+Application login failure,Users cannot authenticate into software,Software
+File upload feature broken,Application rejects uploaded files,Software
+Word document stuck processing,Word freezes when saving,Software
+Zoom video lag,Conferencing software video stutters,Software
+Slack not loading channels,Chat app stuck on connecting,Software
+Photoshop memory error,Adobe app claims insufficient RAM,Software
+Java runtime error,Legacy application fails to execute,Software
+Python environment broken,Scripts failing to run locally,Software
+VPN client crashing,Cisco AnyConnect closes unexpectedly,Software
+AutoCAD license checkout failed,Cannot acquire network license,Software
+SAP GUI performance,Transactions loading very slowly,Software
+Chrome eating memory,Browser causing system to crawl,Software
+Firefox won't load pages,Browser opens but displays blank,Software
+Adobe Acrobat requires sign-in loop,Keeps asking for credentials,Software
+Windows Explorer restarting,Desktop taskbar keeps vanishing,Software
+Mac OS kernel panic,Apple system crashes to black screen,Software
+OneDrive sync stuck,Files stuck at 99 percent upload,Software
+Visual Studio failing to build,IDE throws random compiler errors,Software
+IntelliJ indexing forever,IDE unresponsive during startup,Software
+Docker desktop won't start,Container engine fails to boot,Software
+Tableau dashboard error,Data visualization fails to render,Software
+PowerBI DAX query fail,Report throws calculation error,Software
+Salesforce plugin broken,Outlook integration fails to load,Software
+Notepad++ corrupted plugins,Text editor won't launch,Software
+VLC player no audio,Video plays but sound is missing,Software
+WebEx screen share fails,Cannot share desktop in meeting,Software
+Notion offline mode stuck,App won't sync with cloud,Software
+Trello board won't load,Browser console shows JS errors,Software
+Jira workflow error,Cannot transition ticket status,Software
+Confluence page not saving,Draft fails to publish,Software
+Figma desktop app slow,Design file lags when panning,Software
+QuickBooks database error,Accounting software cannot open company file,Software
+Snagit capture fails,Screenshot tool throws error,Software
+7Zip extraction error,Archive reports file corruption,Software
+Malware scan stuck,Antivirus freeze at 50 percent,Software
+System restore failed,Windows cannot revert to previous state,Software
+Registry error,Corrupted OS settings causing glitches,Software
+Need SAP access,User requires access to SAP system,Access
+Request ERP access,Employee requires ERP permissions,Access
+Access denied to shared folder,User cannot open department folder,Access
+Need database access,Developer requires database credentials,Access
+VPN access request,Employee needs VPN account activation,Access
+New employee account creation,Create account for new hire,Access
+Remove former employee access,Disable account of departed employee,Access
+Privilege escalation request,Additional permissions required for project,Access
+Password reset request,User forgot account password,Access
+Application access missing,Required application not visible to user,Access
+Request access to SharePoint,User needs SharePoint permissions,Access
+Need Git repository access,Developer requires repository permissions,Access
+Create email account,New employee requires mailbox creation,Access
+Disable inactive account,Remove access for inactive employee,Access
+Multi-factor authentication issue,User cannot complete MFA setup,Access
+Locked out of Windows,Too many incorrect password attempts,Access
+AWS IAM role request,Developer needs cloud infrastructure access,Access
+Azure AD sync failure,Local password not matching cloud,Access
+Salesforce profile update,Need admin rights in CRM,Access
+Visitor WiFi voucher,Need temporary access for guest,Access
+Admin rights for local PC,Need ability to install software,Access
+Unlock SAP account,User locked out after 3 tries,Access
+Revoke contractor access,Contract ended early,Access
+File server read-only issue,Need write permissions to shared drive,Access
+Group policy update,Need machine added to specific OU,Access
+Distribution list ownership,Make user manager of email group,Access
+SSO login failing,Single sign-on redirects to error page,Access
+Biometric registration,Need fingerprint added to system,Access
+Door badge not working,Cannot enter IT server room,Access
+Jira project admin rights,Need to configure workflow,Access
+GitHub Copilot license,Requesting access to AI tool,Access
+Financial system approval,Need CFO approval for access,Access
+Temporary local admin,Require 24-hour admin token,Access
+Unlock AD account,Domain account locked globally,Access
+MFA device replacement,Lost phone need reset authenticator,Access
+Change name in active directory,User legally changed last name,Access
+Service account creation,Need non-human account for script,Access
+FTP access required,Need to upload files to vendor,Access
+Extend contractor end date,Keep account active for 3 months,Access
+Transfer folder ownership,Previous owner left the company,Access
+Box drive permissions,Cannot view HR secure folder,Access
+Slack workspace invite,Need access to external partner Slack,Access
+Miro board access,Requesting edit rights to whiteboard,Access
+Tableau viewer license,Need to see executive reports,Access
+Bypass conditional access,Traveling to restricted country,Access
+Token sync issue,Hard token codes not accepted,Access
+VPN split tunneling group,Need access to local printers while on VPN,Access
+Add to security group,Need membership to deploy app,Access
+Offboarding checklist incomplete,Missed removing one system access,Access
+Password expiry warning,Cannot change password remotely,Access

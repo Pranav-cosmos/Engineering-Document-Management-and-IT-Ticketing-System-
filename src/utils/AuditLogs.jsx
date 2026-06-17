@@ -16,7 +16,7 @@ export default function AuditLogs() {
         full_name,
         role
       )
-    `).order("created_at", { ascending: false }).limit(25);
+    `).order("created_at", { ascending: false }).limit(18);
 
     if (filterAction) query = query.eq("action", filterAction);
     if (filterEntity) query = query.eq("entity_type", filterEntity);

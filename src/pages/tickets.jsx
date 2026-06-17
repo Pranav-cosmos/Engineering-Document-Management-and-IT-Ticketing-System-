@@ -704,7 +704,6 @@ export default function Tickets() {
                       {/* Card action buttons */}
                       <div className="doc-card-actions">
                         <Link to={`/tickets/${ticket.id}`} className="btn btn-ghost btn-sm">View</Link>
-                        <button className="btn btn-ghost btn-sm" onClick={() => startEditTicket(ticket)}>Edit</button>
                         <button className="btn btn-danger btn-sm" onClick={() => deleteTicket(ticket)}>Delete</button>
                       </div>
 
