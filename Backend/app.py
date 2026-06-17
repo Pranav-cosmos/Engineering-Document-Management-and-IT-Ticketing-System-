@@ -3,56 +3,82 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 
-app = FastAPI(title="EDMS AI Service")
+from rag.generator import answer_question
+
+app = FastAPI(
+    title="EDMS AI Service"
+)
 
 model = joblib.load(
     "models/category_pipeline.pkl"
 )
+
 print("Model loaded successfully!")
 
-# Allow React frontend to call FastAPI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict later
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Request schema
+
 class TicketRequest(BaseModel):
     title: str
     description: str
 
-# Health check
+
+class ChatRequest(BaseModel):
+    question: str
+
+
 @app.get("/")
 def root():
+
     return {
-        "message": "AI Service Running"
+        "message": "EDMS AI Service Running"
     }
 
-# Category prediction endpoint
-@app.post("/predict-category")
+
+@app.post(
+    "/predict-category",
+    tags=["Ticket AI"]
+)
 def predict_category(ticket: TicketRequest):
 
-    text = f"{ticket.title} {ticket.description}"
+    text = (
+        f"{ticket.title} "
+        f"{ticket.description}"
+    )
 
-    prediction = model.predict([text])[0]
+    prediction = model.predict(
+        [text]
+    )[0]
 
-    probabilities = model.predict_proba([text])[0]
+    probabilities = model.predict_proba(
+        [text]
+    )[0]
 
-    confidence = float(max(probabilities))
+    confidence = float(
+        max(probabilities)
+    )
 
     return {
         "category": prediction,
-        "confidence": round(confidence, 2)
+        "confidence": round(
+            confidence,
+            2
+        )
     }
 
-# Priority prediction endpoint
-@app.post("/predict-priority")
-def predict_priority(ticket: TicketRequest):
 
-    return {
-        "priority": "High",
-        "confidence": 0.89
-    }   
+@app.post(
+    "/chat",
+    tags=["RAG Chat"]
+)
+def chat(data: ChatRequest):
+
+    return answer_question(
+        data.question
+    )
