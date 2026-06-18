@@ -471,22 +471,16 @@ export default function Dashboard() {
                       <button
                         key={r}
                         onClick={() => setActiveRange(r)}
-                        style={{
-                          padding: "5px 14px", borderRadius: 7, border: "1px solid var(--border)",
-                          background: activeRange === r ? "var(--accent)" : "transparent",
-                          color: activeRange === r ? "#fff" : "var(--text-muted)",
-                          cursor: "pointer", fontSize: "0.78rem", fontWeight: 600,
-                          fontFamily: "var(--font)", transition: "all 0.2s ease",
-                        }}
+                        className={`dash-range-btn${activeRange === r ? " active" : ""}`}
                       >{r}</button>
                     ))}
                   </div>
                 </div>
 
                 {/* Totals for the selected period */}
-                <div style={{ display: "flex", gap: 28, marginBottom: 18 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(13,148,136,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>🎫</div>
+                <div className="dash-trend-row">
+                  <div className="dash-trend-item">
+                    <div className="dash-metric-icon" style={{ background: "rgba(13,148,136,0.1)" }}>🎫</div>
                     <div>
                       <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Tickets</div>
                       <div style={{ fontFamily: "var(--font-heading)", fontSize: "1.3rem", fontWeight: 800, color: "var(--text-heading)" }}>
@@ -494,8 +488,8 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(217,119,6,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>📄</div>
+                  <div className="dash-trend-item">
+                    <div className="dash-metric-icon" style={{ background: "rgba(217,119,6,0.1)" }}>📄</div>
                     <div>
                       <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Documents</div>
                       <div style={{ fontFamily: "var(--font-heading)", fontSize: "1.3rem", fontWeight: 800, color: "var(--text-heading)" }}>
@@ -514,12 +508,12 @@ export default function Dashboard() {
                 />
 
                 {/* Legend */}
-                <div style={{ display: "flex", gap: 18, marginTop: 10, justifyContent: "center" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: COLORS.teal, display: "inline-block" }} /> Tickets
+                <div className="dash-legend">
+                  <span className="dash-legend-item">
+                    <span className="dash-legend-dot" style={{ background: COLORS.teal }} /> Tickets
                   </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} /> Documents
+                  <span className="dash-legend-item">
+                    <span className="dash-legend-dot" style={{ background: COLORS.amber }} /> Documents
                   </span>
                 </div>
               </div>
@@ -539,9 +533,9 @@ export default function Dashboard() {
                     const total = chartData.byStatus.reduce((s, d) => s + d.value, 0) || 1;
                     const pct = ((item.value / total) * 100).toFixed(1);
                     return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ width: 10, height: 10, borderRadius: 3, background: item.color, display: "inline-block" }} />
+                      <div key={i} className="dash-status-row">
+                        <div className="dash-status-label">
+                          <span className="dash-status-dot" style={{ background: item.color }} />
                           <span style={{ fontSize: "0.84rem", fontWeight: 500, color: "var(--text)" }}>{item.label}</span>
                         </div>
                         <span style={{ fontSize: "0.84rem", fontWeight: 700, color: "var(--text-heading)" }}>{pct}%</span>

@@ -25,6 +25,7 @@ export default function Sidebar() {
     { to: "/documents", label: "Documents" },
     { to: "/tickets", label: "Tickets" },
     { to: "/audit-logs", label: "Audit Logs" },
+    { to: "/document-chat", label: "Document Chat" },
     ...(canManageUsers ? [{ to: "/users", label: "Users" }] : []),
   ];
 

@@ -11,6 +11,7 @@ import TicketsDetails from "./pages/TIcketsDetails";
 import AuditLogs from "./utils/AuditLogs";
 import Profile from "./pages/Profile";
 import Users from "./pages/Users";
+import DocumentChat from "./pages/DocumentChat";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -50,6 +51,7 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute user={user}><Profile /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute user={user}><Users /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
+        <Route path="/document-chat" element={<ProtectedRoute user={user}><DocumentChat /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
