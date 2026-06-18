@@ -22,11 +22,11 @@ def save_index(
 
     faiss.write_index(
         index,
-        "faiss/index.faiss"
+        "rag/faiss/index.faiss"
     )
 
     with open(
-        "faiss/metadata.pkl",
+        "rag/faiss/metadata.pkl",
         "wb"
     ) as f:
         pickle.dump(

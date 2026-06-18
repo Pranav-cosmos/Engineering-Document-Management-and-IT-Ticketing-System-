@@ -1,7 +1,7 @@
-from document_processor import extract_text
-from chunker import create_chunks
-from embeddings import generate_embeddings
-from vector_store import (
+from .document_processor import extract_text
+from .chunker import create_chunks
+from .embeddings import generate_embeddings
+from .vector_store import (
     create_index,
     save_index
 )

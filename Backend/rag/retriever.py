@@ -1,16 +1,16 @@
 import faiss
 import pickle
-from embeddings import model
+from .embeddings import model
 
 
 def load_index():
 
     index = faiss.read_index(
-        "faiss/index.faiss"
+        "rag/faiss/index.faiss"
     )
 
     with open(
-        "faiss/metadata.pkl",
+        "rag/faiss/metadata.pkl",
         "rb"
     ) as f:
 

@@ -1,5 +1,5 @@
-from retriever import search_documents
-from gemini_client import client
+from .retriever import search_documents
+from .gemini_client import client
 
 
 def answer_question(question):
