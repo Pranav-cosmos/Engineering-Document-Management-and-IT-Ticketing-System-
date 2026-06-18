@@ -71,7 +71,7 @@ export default function DocumentChat() {
                 <div className="chat-page">
                     {/* ── Page Header ── */}
                     <div className="chat-page-header">
-                        <h1>🤖 AI Document Assistant</h1>
+                        <h1>AI Document Assistant</h1>
                         <p>Ask questions about the uploaded engineering documents.</p>
                     </div>
 
@@ -115,6 +115,11 @@ export default function DocumentChat() {
                                                             key={sourceIndex}
                                                             className="chat-source-item"
                                                         >
+                                                            {source.title && (
+                                                                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-heading)", marginBottom: 4 }}>
+                                                                    📄 {source.title}
+                                                                </div>
+                                                            )}
                                                             <div className="chat-source-score">
                                                                 ✦ Similarity:{" "}
                                                                 {typeof source.score === "number"
