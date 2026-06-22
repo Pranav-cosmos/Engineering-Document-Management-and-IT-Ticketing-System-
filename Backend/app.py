@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 
-from rag.retriever import build_index
 from rag.generator import answer_question
 
 
@@ -23,9 +22,6 @@ async def lifespan(app: FastAPI):
     print("[startup] Loading ML model …")
     ml_model = joblib.load(os.path.join(os.path.dirname(__file__), "models", "category_pipeline.pkl"))
     print("[startup] ML model loaded successfully!")
-    print("[startup] Building RAG index from Supabase …")
-    build_index()
-    print("[startup] RAG index ready.")
     yield   # server runs here
     # (shutdown cleanup can go here if needed)
 
@@ -86,5 +82,7 @@ def index_documents():
     Call this after uploading new documents so the bot picks them up
     without restarting the server.
     """
+    from rag.retriever import build_index
+
     build_index()
     return {"status": "ok", "message": "Index rebuilt from Supabase documents."}
