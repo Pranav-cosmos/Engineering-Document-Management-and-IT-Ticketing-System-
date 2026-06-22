@@ -9,7 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 
+print("APP START")
+
 from rag.generator import answer_question
+
+print("GENERATOR LOADED")
 
 
 # ── Lifespan: build FAISS index once at startup ──────────────────────────────

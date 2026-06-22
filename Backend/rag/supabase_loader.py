@@ -1,4 +1,4 @@
-"""
+﻿"""
 supabase_loader.py
 ------------------
 Downloads every document stored in the Supabase `documents` table,

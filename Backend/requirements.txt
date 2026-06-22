@@ -6,10 +6,13 @@ joblib
 supabase
 requests
 faiss-cpu
-sentence-transformers
 google-genai
 langchain-text-splitters
 PyMuPDF
 python-docx
 numpy
 scikit-learn
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+sentence-transformers
