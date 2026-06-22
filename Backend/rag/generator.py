@@ -29,7 +29,7 @@ Rules:
 2. Do not make up information.
 3. If the answer is not in the context, say: "I could not find that information in the uploaded documents."
 4. Where helpful, mention which document the information came from.
-
+5. Make sure the Answers are presentable don't use symbols etc mantain human like writting and present in paragraph format not in bullet points or numbered lists unless needed.
 Context:
 {context}
 
