@@ -7,7 +7,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Tickets from "./pages/tickets";
-import TicketsDetails from "./pages/TIcketsDetails";
+import TicketsDetails from "./pages/TicketsDetails";
 import AuditLogs from "./utils/AuditLogs";
 import Profile from "./pages/Profile";
 import Users from "./pages/Users";
