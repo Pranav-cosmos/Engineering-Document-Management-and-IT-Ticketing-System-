@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import os
 from dotenv import load_dotenv
 
 load_dotenv()   # must be before any other local imports that read env vars
@@ -14,8 +15,14 @@ from rag.generator import answer_question
 
 # ── Lifespan: build FAISS index once at startup ──────────────────────────────
 
+ml_model = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global ml_model
+    print("[startup] Loading ML model …")
+    ml_model = joblib.load(os.path.join(os.path.dirname(__file__), "models", "category_pipeline.pkl"))
+    print("[startup] ML model loaded successfully!")
     print("[startup] Building RAG index from Supabase …")
     build_index()
     print("[startup] RAG index ready.")
@@ -27,12 +34,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="EDMS AI Service", lifespan=lifespan)
 
-model = joblib.load("models/category_pipeline.pkl")
-print("ML model loaded successfully!")
+# Read allowed origins from env; fall back to * for local dev
+frontend_url = os.getenv("FRONTEND_URL", "*")
+origins = [frontend_url] if frontend_url != "*" else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,8 +68,8 @@ def root():
 @app.post("/predict-category", tags=["Ticket AI"])
 def predict_category(ticket: TicketRequest):
     text = f"{ticket.title} {ticket.description}"
-    prediction = model.predict([text])[0]
-    probabilities = model.predict_proba([text])[0]
+    prediction = ml_model.predict([text])[0]
+    probabilities = ml_model.predict_proba([text])[0]
     confidence = float(max(probabilities))
     return {"category": prediction, "confidence": round(confidence, 2)}
 

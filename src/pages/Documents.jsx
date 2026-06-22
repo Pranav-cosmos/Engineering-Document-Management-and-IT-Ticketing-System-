@@ -311,7 +311,7 @@ function Documents() {
       fetchDocuments();
 
       // Rebuild the RAG index so the chatbot picks up the new document
-      fetch("http://localhost:8000/index-documents", { method: "POST" }).catch(() => { });
+      fetch(`${import.meta.env.VITE_API_URL}/index-documents`, { method: "POST" }).catch(() => { });
     } catch (err) {
       console.error(err);
       showToast("Upload failed", "error");
@@ -365,7 +365,7 @@ function Documents() {
       setVersionFile(null);
 
       // Rebuild the RAG index so the chatbot picks up the new version
-      fetch("http://localhost:8000/index-documents", { method: "POST" }).catch(() => { });
+      fetch(`${import.meta.env.VITE_API_URL}/index-documents`, { method: "POST" }).catch(() => { });
     } catch (err) {
       console.error(err);
       showToast("Version upload failed", "error");
@@ -499,7 +499,7 @@ function Documents() {
     fetchDocuments();
 
     // Rebuild the RAG index so the chatbot no longer references the deleted document
-    fetch("http://localhost:8000/index-documents", { method: "POST" }).catch(() => { });
+    fetch(`${import.meta.env.VITE_API_URL}/index-documents`, { method: "POST" }).catch(() => { });
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

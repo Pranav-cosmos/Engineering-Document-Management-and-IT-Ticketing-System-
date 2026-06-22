@@ -23,7 +23,21 @@ dist-ssr
 *.sln
 *.sw?
 .env
+Backend/.env
 .gitignore
 
 __pycache__/
 *.pyc
+.env
+.env.*
+Backend/.env
+
+__pycache__/
+*.pyc
+
+node_modules/
+
+.venv/
+venv/
+
+.git/

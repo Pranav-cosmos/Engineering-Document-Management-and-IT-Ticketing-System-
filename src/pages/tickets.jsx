@@ -95,7 +95,7 @@ export default function Tickets() {
     console.log(ticketForm);
 
     const res = await fetch(
-      "http://127.0.0.1:8000/predict-category",
+      `${import.meta.env.VITE_API_URL}/predict-category`,
       {
         method: "POST",
         headers: {

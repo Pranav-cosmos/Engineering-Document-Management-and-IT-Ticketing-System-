@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+joblib
+supabase
+requests
+faiss-cpu
+sentence-transformers
+google-genai
+langchain-text-splitters
+PyMuPDF
+python-docx
+numpy
+scikit-learn
