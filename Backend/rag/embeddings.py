@@ -1,23 +1,19 @@
-from sentence_transformers import SentenceTransformer
-
-_model = None
-
-
-def get_model():
-    global _model
-
-    if _model is None:
-        print("[RAG] Loading embedding model...")
-        _model = SentenceTransformer(
-            "all-MiniLM-L6-v2"
-        )
-
-    return _model
-
+import numpy as np
+from .gemini_client import client
 
 def generate_embeddings(chunks):
-
-    return get_model().encode(
-        chunks,
-        convert_to_numpy=True
-    )
+    print(f"[embeddings] Generating embeddings for {len(chunks)} chunks using Gemini...")
+    
+    batch_size = 100
+    all_embeddings = []
+    
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i:i + batch_size]
+        response = client.models.embed_content(
+            model="gemini-embedding-2",
+            contents=batch
+        )
+        batch_embeddings = [emb.values for emb in response.embeddings]
+        all_embeddings.extend(batch_embeddings)
+        
+    return np.array(all_embeddings, dtype="float32")

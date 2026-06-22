@@ -11,7 +11,7 @@ import faiss
 import pickle
 import numpy as np
 
-from .embeddings import get_model
+from .embeddings import generate_embeddings
 from .supabase_loader import load_all_documents
 from .vector_store import create_index as _create_faiss_index
 
@@ -76,9 +76,7 @@ def search_documents(
     if idx is None or idx.ntotal == 0:
         return []
 
-    question_embedding = get_model().encode(
-        [question]
-    ).astype("float32")
+    question_embedding = generate_embeddings([question])
 
     distances, indices = idx.search(
         question_embedding,
