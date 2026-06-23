@@ -15,7 +15,7 @@ import os
 import numpy as np
 import faiss
 
-from .embeddings import generate_embeddings
+from .embeddings import embed_documents, embed_query
 from .supabase_loader import load_all_documents, load_new_documents
 from .vector_store import create_index as _create_faiss_index
 
@@ -133,7 +133,7 @@ def search_documents(question: str, top_k: int = 5) -> list:
         print("[retriever] search_documents: index is empty.")
         return []
 
-    question_embedding = generate_embeddings([question])
+    question_embedding = embed_query(question)
 
     distances, indices = _index.search(
         question_embedding,

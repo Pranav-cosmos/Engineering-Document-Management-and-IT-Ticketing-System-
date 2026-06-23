@@ -22,7 +22,7 @@ from supabase import create_client
 
 from .document_processor import extract_text
 from .chunker import create_chunks
-from .embeddings import generate_embeddings
+from .embeddings import embed_documents
 
 # ── Supabase client (lazy - created on first use after dotenv loads) ──────────
 
@@ -158,7 +158,7 @@ def _process_rows(rows):
 
     # Embed all chunks
     print(f"[supabase_loader] Embedding {len(all_chunks)} total chunks ...")
-    embeddings = generate_embeddings(all_chunks)
+    embeddings = embed_documents(all_chunks)
     print("[supabase_loader] Done.")
 
     return all_chunks, embeddings, all_meta, indexed_ids
