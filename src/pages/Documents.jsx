@@ -498,8 +498,12 @@ function Documents() {
     showToast("Document deleted");
     fetchDocuments();
 
-    // Rebuild the RAG index so the chatbot no longer references the deleted document
-    fetch(`${import.meta.env.VITE_API_URL}/index-documents`, { method: "POST" }).catch(() => { });
+    // Remove this document's chunks from the RAG index
+    fetch(`${import.meta.env.VITE_API_URL}/remove-document`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ doc_id: doc.id }),
+    }).catch(() => { });
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

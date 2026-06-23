@@ -12,12 +12,12 @@ import joblib
 print("APP START")
 
 from rag.generator import answer_question
-from rag.retriever import build_index, add_new_documents
+from rag.retriever import build_index, add_new_documents, remove_document
 
 print("GENERATOR + RETRIEVER LOADED")
 
 
-# ── Lifespan: load ML model AND build the RAG index at startup ────────────────
+# ── Lifespan ──────────────────────────────────────────────────────────────────
 
 ml_model = None
 
@@ -25,32 +25,26 @@ ml_model = None
 async def lifespan(app: FastAPI):
     global ml_model
 
-    # 1. Load ticket-classification ML model
     print("[startup] Loading ML model …")
     ml_model = joblib.load(
         os.path.join(os.path.dirname(__file__), "models", "category_pipeline.pkl")
     )
     print("[startup] ML model loaded.")
 
-    # 2. Build the RAG FAISS index from Supabase documents
-    #    Wrapped in try/except so the server still starts even if Supabase
-    #    is unreachable (e.g. missing env vars during local dev).
     print("[startup] Building RAG index …")
     try:
         build_index()
         print("[startup] RAG index ready.")
     except Exception as exc:
-        print(f"[startup] WARNING: RAG index could not be built: {exc}")
+        print(f"[startup] WARNING: RAG index build failed: {exc}")
 
-    yield   # server runs here
-    # (shutdown cleanup can go here if needed)
+    yield
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
 
 app = FastAPI(title="EDMS AI Service", lifespan=lifespan)
 
-# Read allowed origins from env; fall back to * for local dev
 frontend_url = os.getenv("FRONTEND_URL", "*")
 origins = [frontend_url] if frontend_url != "*" else ["*"]
 
@@ -63,15 +57,17 @@ app.add_middleware(
 )
 
 
-# ── Request / response models ─────────────────────────────────────────────────
+# ── Models ────────────────────────────────────────────────────────────────────
 
 class TicketRequest(BaseModel):
     title: str
     description: str
 
-
 class ChatRequest(BaseModel):
     question: str
+
+class RemoveDocRequest(BaseModel):
+    doc_id: str
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -84,9 +80,9 @@ def root():
 @app.post("/predict-category", tags=["Ticket AI"])
 def predict_category(ticket: TicketRequest):
     text = f"{ticket.title} {ticket.description}"
-    prediction   = ml_model.predict([text])[0]
+    prediction    = ml_model.predict([text])[0]
     probabilities = ml_model.predict_proba([text])[0]
-    confidence   = float(max(probabilities))
+    confidence    = float(max(probabilities))
     return {"category": prediction, "confidence": round(confidence, 2)}
 
 
@@ -98,23 +94,34 @@ def chat(data: ChatRequest):
 @app.post("/index-documents", tags=["RAG Chat"])
 def index_documents():
     """
-    Incrementally embeds only NEW documents (those not yet in the in-memory
-    index) and appends them to the FAISS index.
-
-    This is memory-safe: we never re-download or re-embed existing documents,
-    so memory usage stays proportional to the NEW documents added, not to the
-    entire corpus.
-
-    Call this after uploading a new document so the chatbot picks it up
-    without restarting the server.
+    Called by the frontend after a document is uploaded.
+    Embeds ONLY the new document and appends it to the index — memory-safe.
     """
     result = add_new_documents()
     return {
         "status": "ok",
         "message": (
             f"Added {result['added_chunks']} chunks from "
-            f"{result['added_docs']} new document(s). "
-            f"Total indexed chunks: {result['total_chunks']}."
+            f"{result['added_docs']} new doc(s). "
+            f"Total: {result['total_chunks']} chunks."
+        ),
+        **result,
+    }
+
+
+@app.post("/remove-document", tags=["RAG Chat"])
+def remove_doc(data: RemoveDocRequest):
+    """
+    Called by the frontend after a document is deleted from Supabase.
+    Removes that document's chunks from the in-memory index instantly —
+    no re-embedding needed (uses stored embeddings array).
+    """
+    result = remove_document(data.doc_id)
+    return {
+        "status": "ok",
+        "message": (
+            f"Removed {result['removed_chunks']} chunks. "
+            f"Total remaining: {result['total_chunks']}."
         ),
         **result,
     }

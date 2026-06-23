@@ -145,7 +145,7 @@ def _process_rows(rows):
 
             for chunk in chunks:
                 all_chunks.append(chunk)
-                all_meta.append({"title": title, "file_url": public_url})
+                all_meta.append({"title": title, "file_url": public_url, "doc_id": doc_id})
 
             indexed_ids.add(doc_id)
 
