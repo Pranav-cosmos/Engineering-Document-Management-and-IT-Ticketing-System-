@@ -1,22 +1,30 @@
 """
-supabase_loader.py – Downloads documents from Supabase, extracts text, chunks,
-and embeds them.  Supports loading all docs or a single doc by ID.
+supabase_loader.py – Downloads a document from Supabase Storage, extracts
+text, and returns plain chunks.
+
+This module is intentionally thin: it does NOT embed or store anything.
+Embedding and pgvector insertion are handled by pgvector_store.py so that
+the two concerns stay separated.
 """
 
-import os, tempfile, requests
-from supabase import create_client
+from __future__ import annotations
+
+import os
+import tempfile
+from typing import Tuple, List
+
+import requests
+from supabase import create_client, Client
 
 from .document_processor import extract_text
 from .chunker import create_chunks
-from .embeddings import (
-    embed_documents,
-    embed_query
-)
+
 STORAGE_BUCKET = "Documents"
-_supabase = None
+
+_supabase: Client | None = None
 
 
-def _get_client():
+def _get_client() -> Client:
     global _supabase
     if _supabase is None:
         url = os.getenv("SUPABASE_URL", "")
@@ -29,87 +37,75 @@ def _get_client():
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def load_all_documents():
-    """Load every document. Returns (chunks, embeddings, meta, chunk_doc_ids)."""
-    sb = _get_client()
-    response = sb.table("documents").select("id, title, file_url").execute()
-    rows = response.data or []
-    if not rows:
-        print("[loader] No documents in database.")
-        return [], None, [], []
-    return _process_rows(rows)
+def load_and_chunk_document(doc_id: str) -> Tuple[List[str], str, str, int]:
+    """
+    Fetch a document row from the `documents` table, download the file from
+    Supabase Storage, extract its text, and split it into chunks.
 
-
-def load_single_document(doc_id):
-    """Load one document by ID. Returns (chunks, embeddings, meta, chunk_doc_ids)."""
+    Returns
+    -------
+    (chunks, title, file_url, document_version)
+        chunks           – list of text strings ready for embedding
+        title            – document title (for attribution in search results)
+        file_url         – storage path (used to build public URL in results)
+        document_version – current version number from the documents table
+    """
     sb = _get_client()
-    response = sb.table("documents").select("id, title, file_url").eq("id", str(doc_id)).execute()
-    rows = response.data or []
-    if not rows:
+    resp = (
+        sb.table("documents")
+        .select("id, title, file_url, version")
+        .eq("id", str(doc_id))
+        .single()
+        .execute()
+    )
+
+    row = resp.data
+    if not row:
         print(f"[loader] Document {doc_id} not found.")
-        return [], None, [], []
-    return _process_rows(rows)
+        return [], "", "", 1
 
+    title            = row.get("title", "Untitled")
+    storage_path     = row.get("file_url", "")
+    document_version = row.get("version", 1) or 1
 
-# ── Internal ──────────────────────────────────────────────────────────────────
+    if not storage_path:
+        print(f"[loader] Document {doc_id} has no file_url.")
+        return [], title, "", document_version
 
-def _process_rows(rows):
-    all_chunks = []
-    all_meta = []
-    chunk_doc_ids = []
+    ext = _guess_ext(storage_path)
+    if ext not in (".pdf", ".docx", ".doc", ".txt"):
+        print(f"[loader] Skipping '{title}' – unsupported extension: {ext}")
+        return [], title, storage_path, document_version
 
-    for doc in rows:
-        doc_id = doc.get("id")
-        title = doc.get("title", "Untitled")
-        storage_path = doc.get("file_url", "")
+    print(f"[loader] Processing: {title} (v{document_version})")
 
-        if not storage_path:
-            continue
+    try:
+        public_url = _get_public_url(storage_path)
+        file_bytes = _download(public_url, storage_path)
 
-        ext = _guess_ext(storage_path)
-        if ext not in (".pdf", ".docx", ".doc", ".txt"):
-            print(f"[loader] Skipping '{title}' – unsupported: {ext}")
-            continue
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+            tmp.write(file_bytes)
+            tmp_path = tmp.name
 
-        print(f"[loader] Processing: {title}")
-        try:
-            public_url = _get_public_url(storage_path)
-            file_bytes = _download(public_url, storage_path)
+        text = extract_text(tmp_path)
+        os.unlink(tmp_path)
 
-            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
-                tmp.write(file_bytes)
-                tmp_path = tmp.name
+        if not text.strip():
+            print(f"[loader]   -> Empty text for '{title}', skipping.")
+            return [], title, public_url, document_version
 
-            text = extract_text(tmp_path)
-            os.unlink(tmp_path)
+        chunks = create_chunks(text)
+        print(f"[loader]   -> {len(chunks)} chunks for '{title}'")
+        return chunks, title, public_url, document_version
 
-            if not text.strip():
-                print(f"[loader]   -> Empty text, skipping.")
-                continue
-
-            chunks = create_chunks(text)
-            print(f"[loader]   -> {len(chunks)} chunks")
-
-            for c in chunks:
-                all_chunks.append(c)
-                all_meta.append({"title": title, "file_url": public_url})
-                chunk_doc_ids.append(doc_id)
-
-        except Exception as exc:
-            print(f"[loader] ERROR on '{title}': {exc}")
-            continue
-
-    if not all_chunks:
-        return [], None, [], []
-
-    print(f"[loader] Embedding {len(all_chunks)} chunks ...")
-    embeddings = embed_documents(all_chunks)
-    return all_chunks, embeddings, all_meta, chunk_doc_ids
+    except Exception as exc:
+        print(f"[loader] ERROR processing '{title}': {exc}")
+        return [], title, storage_path, document_version
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _get_public_url(storage_path):
+def _get_public_url(storage_path: str) -> str:
     sb = _get_client()
     result = sb.storage.from_(STORAGE_BUCKET).get_public_url(storage_path)
     if isinstance(result, str):
@@ -118,16 +114,16 @@ def _get_public_url(storage_path):
     return f"{base}/storage/v1/object/public/{STORAGE_BUCKET}/{storage_path}"
 
 
-def _download(url, storage_path=None):
+def _download(url: str, storage_path: str | None = None) -> bytes:
     try:
         resp = requests.get(url, timeout=60)
         resp.raise_for_status()
         if "html" in resp.headers.get("content-type", "") and storage_path:
-            raise ValueError("Got HTML instead of file")
+            raise ValueError("Got HTML instead of file content")
         return resp.content
-    except Exception as exc:
+    except Exception:
         if storage_path:
-            print(f"[loader]   -> Public URL failed, trying storage download...")
+            print("[loader]   -> Public URL failed, trying storage SDK download …")
             sb = _get_client()
             result = sb.storage.from_(STORAGE_BUCKET).download(storage_path)
             if result:
@@ -135,7 +131,7 @@ def _download(url, storage_path=None):
         raise
 
 
-def _guess_ext(path):
+def _guess_ext(path: str) -> str:
     name = path.rsplit("/", 1)[-1].split("?")[0]
     if "." in name:
         return "." + name.rsplit(".", 1)[-1].lower()

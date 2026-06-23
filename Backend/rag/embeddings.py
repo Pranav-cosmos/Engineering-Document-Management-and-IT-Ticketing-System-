@@ -26,7 +26,8 @@ def _embed(texts, task_type):
             model=MODEL,
             contents=batch,
             config={
-                "task_type": task_type
+                "task_type": task_type,
+                "output_dimensionality": 1024
             }
         )
         print(len(response.embeddings))

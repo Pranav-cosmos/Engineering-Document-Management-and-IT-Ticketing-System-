@@ -31,12 +31,9 @@ async def lifespan(app: FastAPI):
     )
     print("[startup] ML model loaded.")
 
-    print("[startup] Building RAG index ...")
-    try:
-        build_index()
-    except Exception as exc:
-        print(f"[startup] RAG index failed: {exc}")
-    print("[startup] Done.")
+    # pgvector mode: embeddings are persisted in Supabase, nothing to build.
+    build_index()
+    print("[startup] Ready.")
 
     yield
 
@@ -93,13 +90,13 @@ def chat(data: ChatRequest):
 
 @app.post("/index-document", tags=["RAG Chat"])
 def index_document(data: DocIdRequest):
-    """Embed a single document and add it to the FAISS index."""
+    """Embed a single document and store its chunks in Supabase pgvector."""
     result = add_document(data.doc_id)
     return {"status": "ok", **result}
 
 
 @app.post("/remove-document", tags=["RAG Chat"])
 def remove_document_endpoint(data: DocIdRequest):
-    """Remove a single document's chunks from the FAISS index."""
+    """Remove a single document's chunks from Supabase pgvector."""
     result = remove_document(data.doc_id)
     return {"status": "ok", **result}

@@ -47,13 +47,15 @@ Question:
     except Exception as e:
         answer = f"Error: {str(e)}"
 
-    # Return serialisable sources (strip numpy floats, keep title)
+    # Return serialisable sources — similarity replaces the old L2 distance score
     clean_sources = [
         {
-            "chunk":    r.get("chunk", ""),
-            "score":    round(float(r.get("score", 0)), 4),
-            "title":    r.get("title", ""),
-            "file_url": r.get("file_url", ""),
+            "chunk":             r.get("chunk", ""),
+            "similarity":        round(float(r.get("similarity", 0.0)), 4),
+            "title":             r.get("title", ""),
+            "file_url":          r.get("file_url", ""),
+            "document_version":  r.get("document_version", 1),
+            "chunk_index":       r.get("chunk_index", 0),
         }
         for r in results
     ]

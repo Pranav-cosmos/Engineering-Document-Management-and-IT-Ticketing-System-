@@ -5,7 +5,6 @@ pydantic
 joblib
 supabase
 requests
-faiss-cpu
 google-genai
 langchain-text-splitters
 PyMuPDF
