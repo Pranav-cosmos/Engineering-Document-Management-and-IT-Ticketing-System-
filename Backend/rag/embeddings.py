@@ -16,7 +16,7 @@ from google.genai import types as genai_types
 from .gemini_client import embed_client
 
 # text-embedding-004 is stable, universally available, and supports task_type
-_MODEL = "text-embedding-004"
+_MODEL = "gemini-embedding-2"
 
 # ── Public helpers ────────────────────────────────────────────────────────────
 
