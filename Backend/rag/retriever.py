@@ -36,7 +36,8 @@ def build_index():
     try:
         chunks, embeddings, doc_map, indexed_ids = load_all_documents()
     except Exception as exc:
-        print(f"[retriever] build_index error: {exc}")
+        import traceback
+        print(f"[retriever] build_index FAILED:\n{traceback.format_exc()}")
         _reset()
         return
 
