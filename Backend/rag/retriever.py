@@ -1,43 +1,39 @@
 """
-retriever.py
-------------
-In-memory FAISS index over Supabase document chunks.
+retriever.py – In-memory FAISS index with per-document add/remove support.
 
-Functions:
-  build_index()              — called at startup; embeds all docs
-  add_new_documents()        — called after upload; only embeds new docs
-  remove_document(doc_id)    — called after delete; removes chunks without re-embedding
-  search_documents(question) — semantic search
+Stores raw embeddings alongside chunks so documents can be removed without
+re-calling the embedding API. Memory-safe for Render 512 MB.
 """
 
 import numpy as np
 import faiss
 
-from .embeddings import embed_documents, embed_query
-from .supabase_loader import load_all_documents, load_new_documents
-from .vector_store import create_index as _create_faiss_index
+from .embeddings import (
+    embed_documents,
+    embed_query
+)
+from .supabase_loader import load_all_documents, load_single_document
 
-# ── In-memory state ───────────────────────────────────────────────────────────
+# ── In-memory state ──────────────────────────────────────────────────────────
 
-_index       = None        # faiss.IndexFlatL2
-_chunks      = []          # list[str]  — parallel to index rows
-_meta        = []          # list[dict] — {title, file_url, doc_id}
-_embeddings  = None        # np.ndarray (N, dim) — stored so delete needs no re-embed
-_indexed_ids = set()       # set of doc IDs already in the index
+_index = None                # faiss.IndexFlatL2
+_chunks: list = []           # text chunks (parallel)
+_meta: list = []             # {title, file_url} per chunk (parallel)
+_raw_embeddings = None       # np.ndarray (N, dim) – kept for rebuild on delete
+_chunk_doc_ids: list = []    # doc_id per chunk (parallel)
+_indexed_doc_ids: set = set()
 
 
-# ── Startup: build full index ─────────────────────────────────────────────────
+# ── Build full index (startup) ───────────────────────────────────────────────
 
 def build_index():
-    """Download ALL Supabase documents, embed, build FAISS. Called once at startup."""
-    global _index, _chunks, _meta, _embeddings, _indexed_ids
+    global _index, _chunks, _meta, _raw_embeddings, _chunk_doc_ids, _indexed_doc_ids
 
-    print("[retriever] build_index: fetching all documents …")
+    print("[retriever] Building full index from Supabase ...")
     try:
-        chunks, embeddings, doc_map, indexed_ids = load_all_documents()
+        chunks, embeddings, meta, chunk_doc_ids = load_all_documents()
     except Exception as exc:
-        import traceback
-        print(f"[retriever] build_index FAILED:\n{traceback.format_exc()}")
+        print(f"[retriever] build_index failed: {exc}")
         _reset()
         return
 
@@ -46,87 +42,91 @@ def build_index():
         _reset()
         return
 
-    embeddings = np.ascontiguousarray(embeddings, dtype="float32")
-    _index       = _create_faiss_index(embeddings)
-    _chunks      = list(chunks)
-    _meta        = list(doc_map)
-    _embeddings  = embeddings
-    _indexed_ids = set(indexed_ids)
-    print(f"[retriever] Built index: {_index.ntotal} chunks from {len(_indexed_ids)} doc(s).")
+    _raw_embeddings = np.ascontiguousarray(embeddings, dtype="float32")
+    _index = _make_faiss(_raw_embeddings)
+    _chunks = list(chunks)
+    _meta = list(meta)
+    _chunk_doc_ids = list(chunk_doc_ids)
+    _indexed_doc_ids = set(chunk_doc_ids)
+
+    print(f"[retriever] Index ready: {_index.ntotal} chunks, {len(_indexed_doc_ids)} doc(s).")
 
 
-# ── On upload: add only new doc ───────────────────────────────────────────────
+# ── Add single document ─────────────────────────────────────────────────────
 
-def add_new_documents():
-    """Embed only newly-uploaded docs and append to the existing index."""
-    global _index, _chunks, _meta, _embeddings, _indexed_ids
+def add_document(doc_id: str) -> dict:
+    global _index, _chunks, _meta, _raw_embeddings, _chunk_doc_ids, _indexed_doc_ids
 
-    print(f"[retriever] add_new_documents: known={len(_indexed_ids)} doc(s)")
+    doc_id = str(doc_id)
+
+    # If already indexed, remove first (handles version updates)
+    if doc_id in _indexed_doc_ids:
+        remove_document(doc_id)
+
     try:
-        new_chunks, new_emb, new_meta, new_ids = load_new_documents(_indexed_ids)
+        chunks, embeddings, meta, chunk_doc_ids = load_single_document(doc_id)
     except Exception as exc:
-        print(f"[retriever] add_new_documents error: {exc}")
-        return {"added_chunks": 0, "added_docs": 0, "total_chunks": len(_chunks)}
+        print(f"[retriever] add_document failed: {exc}")
+        return {"added_chunks": 0, "total_chunks": len(_chunks)}
 
-    if not new_chunks or new_emb is None:
-        print("[retriever] No new documents.")
-        return {"added_chunks": 0, "added_docs": 0, "total_chunks": len(_chunks)}
+    if not chunks or embeddings is None:
+        return {"added_chunks": 0, "total_chunks": len(_chunks)}
 
-    new_emb = np.ascontiguousarray(new_emb, dtype="float32")
+    new_emb = np.ascontiguousarray(embeddings, dtype="float32")
 
     if _index is None:
-        _index      = _create_faiss_index(new_emb)
-        _embeddings = new_emb
+        _raw_embeddings = new_emb
+        _index = _make_faiss(new_emb)
     else:
         _index.add(new_emb)
-        _embeddings = np.vstack([_embeddings, new_emb])
+        _raw_embeddings = np.vstack([_raw_embeddings, new_emb])
 
-    _chunks.extend(new_chunks)
-    _meta.extend(new_meta)
-    _indexed_ids.update(new_ids)
+    _chunks.extend(chunks)
+    _meta.extend(meta)
+    _chunk_doc_ids.extend(chunk_doc_ids)
+    _indexed_doc_ids.add(doc_id)
 
-    print(f"[retriever] Added {len(new_chunks)} chunks from {len(new_ids)} doc(s). Total: {_index.ntotal}")
-    return {"added_chunks": len(new_chunks), "added_docs": len(new_ids), "total_chunks": _index.ntotal}
+    print(f"[retriever] Added {len(chunks)} chunks for doc {doc_id}. Total: {_index.ntotal}")
+    return {"added_chunks": len(chunks), "total_chunks": _index.ntotal}
 
 
-# ── On delete: remove doc chunks without re-embedding ────────────────────────
+# ── Remove single document ──────────────────────────────────────────────────
 
 def remove_document(doc_id: str) -> dict:
-    """
-    Remove all chunks that belong to doc_id from the in-memory index.
-    Uses the stored _embeddings array so no API calls are needed.
-    """
-    global _index, _chunks, _meta, _embeddings, _indexed_ids
+    global _index, _chunks, _meta, _raw_embeddings, _chunk_doc_ids, _indexed_doc_ids
 
-    keep = [i for i, m in enumerate(_meta) if m.get("doc_id") != doc_id]
-    removed = len(_chunks) - len(keep)
+    doc_id = str(doc_id)
 
-    if removed == 0:
-        print(f"[retriever] remove_document: doc {doc_id} not found in index.")
+    if doc_id not in _indexed_doc_ids:
         return {"removed_chunks": 0, "total_chunks": len(_chunks)}
 
-    _chunks      = [_chunks[i] for i in keep]
-    _meta        = [_meta[i]   for i in keep]
-    _indexed_ids.discard(doc_id)
+    # Find which indices to keep
+    keep = [i for i, d in enumerate(_chunk_doc_ids) if d != doc_id]
+    removed = len(_chunks) - len(keep)
 
-    if keep and _embeddings is not None:
-        kept_emb    = np.ascontiguousarray(_embeddings[keep], dtype="float32")
-        _embeddings = kept_emb
-        _index      = _create_faiss_index(kept_emb)
-    else:
-        _embeddings = None
-        _index      = None
+    _indexed_doc_ids.discard(doc_id)
 
-    total = len(_chunks)
-    print(f"[retriever] Removed {removed} chunks for doc {doc_id}. Remaining: {total}")
-    return {"removed_chunks": removed, "total_chunks": total}
+    if not keep:
+        _reset()
+        print(f"[retriever] Removed {removed} chunks for doc {doc_id}. Index empty.")
+        return {"removed_chunks": removed, "total_chunks": 0}
+
+    _chunks[:] = [_chunks[i] for i in keep]
+    _meta[:] = [_meta[i] for i in keep]
+    _chunk_doc_ids[:] = [_chunk_doc_ids[i] for i in keep]
+    _raw_embeddings = _raw_embeddings[keep]
+
+    # Rebuild FAISS from remaining embeddings (no API call needed)
+    _index = _make_faiss(_raw_embeddings)
+
+    print(f"[retriever] Removed {removed} chunks for doc {doc_id}. Total: {_index.ntotal}")
+    return {"removed_chunks": removed, "total_chunks": _index.ntotal}
 
 
-# ── Search ────────────────────────────────────────────────────────────────────
+# ── Search ───────────────────────────────────────────────────────────────────
 
 def search_documents(question: str, top_k: int = 5) -> list:
     if _index is None or _index.ntotal == 0:
-        print("[retriever] Index is empty.")
         return []
 
     q_emb = embed_query(question)
@@ -136,21 +136,29 @@ def search_documents(question: str, top_k: int = 5) -> list:
     for i, idx in enumerate(indices[0]):
         if idx < 0:
             continue
-        item = {"chunk": _chunks[idx], "score": float(distances[0][i])}
-        if _meta and idx < len(_meta):
-            item["title"]    = _meta[idx].get("title", "")
-            item["file_url"] = _meta[idx].get("file_url", "")
-        results.append(item)
-
+        results.append({
+            "chunk": _chunks[idx],
+            "score": float(distances[0][i]),
+            "title": _meta[idx].get("title", "") if idx < len(_meta) else "",
+            "file_url": _meta[idx].get("file_url", "") if idx < len(_meta) else "",
+        })
     return results
 
 
-# ── Internal ──────────────────────────────────────────────────────────────────
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+def _make_faiss(embeddings: np.ndarray):
+    dim = embeddings.shape[1]
+    index = faiss.IndexFlatL2(dim)
+    index.add(np.ascontiguousarray(embeddings, dtype="float32"))
+    return index
+
 
 def _reset():
-    global _index, _chunks, _meta, _embeddings, _indexed_ids
-    _index       = None
-    _chunks      = []
-    _meta        = []
-    _embeddings  = None
-    _indexed_ids = set()
+    global _index, _chunks, _meta, _raw_embeddings, _chunk_doc_ids, _indexed_doc_ids
+    _index = None
+    _chunks = []
+    _meta = []
+    _raw_embeddings = None
+    _chunk_doc_ids = []
+    _indexed_doc_ids = set()

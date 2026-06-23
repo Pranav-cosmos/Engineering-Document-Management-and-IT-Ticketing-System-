@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
 
-load_dotenv()   # must be before any other local imports that read env vars
+load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,9 +12,9 @@ import joblib
 print("APP START")
 
 from rag.generator import answer_question
-from rag.retriever import build_index, add_new_documents, remove_document
+from rag.retriever import build_index, add_document, remove_document
 
-print("GENERATOR + RETRIEVER LOADED")
+print("MODULES LOADED")
 
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
@@ -25,18 +25,18 @@ ml_model = None
 async def lifespan(app: FastAPI):
     global ml_model
 
-    print("[startup] Loading ML model …")
+    print("[startup] Loading ML model ...")
     ml_model = joblib.load(
         os.path.join(os.path.dirname(__file__), "models", "category_pipeline.pkl")
     )
     print("[startup] ML model loaded.")
 
-    print("[startup] Building RAG index …")
+    print("[startup] Building RAG index ...")
     try:
         build_index()
-        print("[startup] RAG index ready.")
     except Exception as exc:
-        print(f"[startup] WARNING: RAG index build failed: {exc}")
+        print(f"[startup] RAG index failed: {exc}")
+    print("[startup] Done.")
 
     yield
 
@@ -66,7 +66,7 @@ class TicketRequest(BaseModel):
 class ChatRequest(BaseModel):
     question: str
 
-class RemoveDocRequest(BaseModel):
+class DocIdRequest(BaseModel):
     doc_id: str
 
 
@@ -80,9 +80,9 @@ def root():
 @app.post("/predict-category", tags=["Ticket AI"])
 def predict_category(ticket: TicketRequest):
     text = f"{ticket.title} {ticket.description}"
-    prediction    = ml_model.predict([text])[0]
+    prediction = ml_model.predict([text])[0]
     probabilities = ml_model.predict_proba([text])[0]
-    confidence    = float(max(probabilities))
+    confidence = float(max(probabilities))
     return {"category": prediction, "confidence": round(confidence, 2)}
 
 
@@ -91,37 +91,15 @@ def chat(data: ChatRequest):
     return answer_question(data.question)
 
 
-@app.post("/index-documents", tags=["RAG Chat"])
-def index_documents():
-    """
-    Called by the frontend after a document is uploaded.
-    Embeds ONLY the new document and appends it to the index — memory-safe.
-    """
-    result = add_new_documents()
-    return {
-        "status": "ok",
-        "message": (
-            f"Added {result['added_chunks']} chunks from "
-            f"{result['added_docs']} new doc(s). "
-            f"Total: {result['total_chunks']} chunks."
-        ),
-        **result,
-    }
+@app.post("/index-document", tags=["RAG Chat"])
+def index_document(data: DocIdRequest):
+    """Embed a single document and add it to the FAISS index."""
+    result = add_document(data.doc_id)
+    return {"status": "ok", **result}
 
 
 @app.post("/remove-document", tags=["RAG Chat"])
-def remove_doc(data: RemoveDocRequest):
-    """
-    Called by the frontend after a document is deleted from Supabase.
-    Removes that document's chunks from the in-memory index instantly —
-    no re-embedding needed (uses stored embeddings array).
-    """
+def remove_document_endpoint(data: DocIdRequest):
+    """Remove a single document's chunks from the FAISS index."""
     result = remove_document(data.doc_id)
-    return {
-        "status": "ok",
-        "message": (
-            f"Removed {result['removed_chunks']} chunks. "
-            f"Total remaining: {result['total_chunks']}."
-        ),
-        **result,
-    }
+    return {"status": "ok", **result}

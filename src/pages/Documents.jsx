@@ -310,8 +310,12 @@ function Documents() {
       showToast("Document uploaded successfully!");
       fetchDocuments();
 
-      // Rebuild the RAG index so the chatbot picks up the new document
-      fetch(`${import.meta.env.VITE_API_URL}/index-documents`, { method: "POST" }).catch(() => { });
+      // Auto-embed new document for the RAG chatbot
+      fetch(`${import.meta.env.VITE_API_URL}/index-document`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doc_id: docData?.id }),
+      }).catch(() => {});
     } catch (err) {
       console.error(err);
       showToast("Upload failed", "error");
@@ -364,8 +368,12 @@ function Documents() {
       setVersionDoc(null);
       setVersionFile(null);
 
-      // Rebuild the RAG index so the chatbot picks up the new version
-      fetch(`${import.meta.env.VITE_API_URL}/index-documents`, { method: "POST" }).catch(() => { });
+      // Re-index updated document for the RAG chatbot
+      fetch(`${import.meta.env.VITE_API_URL}/index-document`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doc_id: versionDoc.id }),
+      }).catch(() => {});
     } catch (err) {
       console.error(err);
       showToast("Version upload failed", "error");
@@ -498,12 +506,12 @@ function Documents() {
     showToast("Document deleted");
     fetchDocuments();
 
-    // Remove this document's chunks from the RAG index
+    // Remove deleted document from the RAG chatbot index
     fetch(`${import.meta.env.VITE_API_URL}/remove-document`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ doc_id: doc.id }),
-    }).catch(() => { });
+    }).catch(() => {});
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
