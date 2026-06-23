@@ -12,9 +12,11 @@ Gemini embedding models.
 """
 
 import numpy as np
+from google.genai import types as genai_types
 from .gemini_client import client
 
-_MODEL = "gemini-embedding-exp-03-07"
+# text-embedding-004 is stable, universally available, and supports task_type
+_MODEL = "text-embedding-004"
 
 # ── Public helpers ────────────────────────────────────────────────────────────
 
@@ -36,13 +38,13 @@ def embed_query(question: str) -> np.ndarray:
     return _embed([question], task_type="RETRIEVAL_QUERY")
 
 
-# ── Legacy wrapper (still used by retriever for search) ──────────────────────
+# ── Legacy wrapper ────────────────────────────────────────────────────────────
 
 def generate_embeddings(chunks: list[str]) -> np.ndarray:
     """
     Backward-compatible wrapper.
-    - Called with a single-element list at query time -> uses RETRIEVAL_QUERY
-    - Called with multiple chunks at index time      -> uses RETRIEVAL_DOCUMENT
+    - Single-element list at query time  -> RETRIEVAL_QUERY
+    - Multiple chunks at index time      -> RETRIEVAL_DOCUMENT
     """
     if len(chunks) == 1:
         return embed_query(chunks[0])
@@ -54,11 +56,11 @@ def generate_embeddings(chunks: list[str]) -> np.ndarray:
 def _embed(texts: list[str], task_type: str) -> np.ndarray:
     """
     Call the Gemini embed_content API in batches and return a float32 ndarray.
-    Sends each string individually to avoid batch-handling quirks in the API.
     """
-    print(f"[embeddings] Embedding {len(texts)} text(s) with task_type={task_type} ...")
+    print(f"[embeddings] Embedding {len(texts)} text(s) | model={_MODEL} | task={task_type}")
 
-    batch_size = 20          # keep batches small to stay within limits
+    embed_config = genai_types.EmbedContentConfig(task_type=task_type)
+    batch_size   = 20
     all_embeddings = []
 
     for i in range(0, len(texts), batch_size):
@@ -67,25 +69,25 @@ def _embed(texts: list[str], task_type: str) -> np.ndarray:
             response = client.models.embed_content(
                 model=_MODEL,
                 contents=batch,
-                config={"task_type": task_type},
+                config=embed_config,
             )
-            batch_embeddings = [emb.values for emb in response.embeddings]
-            all_embeddings.extend(batch_embeddings)
+            all_embeddings.extend([emb.values for emb in response.embeddings])
+
         except Exception as exc:
-            # Try falling back: embed each text individually
-            print(f"[embeddings] Batch embed failed ({exc}), retrying one by one ...")
+            # Fallback: embed one at a time to isolate any bad chunk
+            print(f"[embeddings] Batch failed ({exc}), retrying one by one ...")
             for text in batch:
                 try:
                     resp = client.models.embed_content(
                         model=_MODEL,
                         contents=text,
-                        config={"task_type": task_type},
+                        config=embed_config,
                     )
                     all_embeddings.append(resp.embeddings[0].values)
-                except Exception as inner_exc:
+                except Exception as inner:
                     raise RuntimeError(
-                        f"[embeddings] Could not embed text: {inner_exc}"
-                    ) from inner_exc
+                        f"[embeddings] Failed to embed text: {inner}"
+                    ) from inner
 
     arr = np.array(all_embeddings, dtype="float32")
     print(f"[embeddings] Done. Shape: {arr.shape}")
