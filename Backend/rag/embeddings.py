@@ -13,7 +13,7 @@ Gemini embedding models.
 
 import numpy as np
 from google.genai import types as genai_types
-from .gemini_client import client
+from .gemini_client import embed_client
 
 # text-embedding-004 is stable, universally available, and supports task_type
 _MODEL = "text-embedding-004"
@@ -66,7 +66,7 @@ def _embed(texts: list[str], task_type: str) -> np.ndarray:
     for i in range(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
         try:
-            response = client.models.embed_content(
+            response = embed_client.models.embed_content(
                 model=_MODEL,
                 contents=batch,
                 config=embed_config,
@@ -78,7 +78,7 @@ def _embed(texts: list[str], task_type: str) -> np.ndarray:
             print(f"[embeddings] Batch failed ({exc}), retrying one by one ...")
             for text in batch:
                 try:
-                    resp = client.models.embed_content(
+                    resp = embed_client.models.embed_content(
                         model=_MODEL,
                         contents=text,
                         config=embed_config,
