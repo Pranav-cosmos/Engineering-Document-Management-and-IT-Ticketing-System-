@@ -129,16 +129,30 @@ def search_chunks(question: str, top_k: int = 5) -> List[Dict[str, Any]]:
     up to *top_k* results as:
         [{"chunk": str, "title": str, "file_url": str, "similarity": float}, ...]
     """
-    q_emb = embed_query(question)
-
-    if q_emb is None or len(q_emb) == 0:
-        print("[pgvector_store] Query embedding failed – returning empty results.")
+    # 1. Embed the question
+    try:
+        q_emb = embed_query(question)
+    except Exception as exc:
+        print(f"[pgvector_store] QUERY EMBEDDING FAILED: {exc}")
         return []
 
-    # q_emb shape: (1, 3072) from embed_query; take the first row
-    vector = q_emb[0].tolist()
+    if q_emb is None or len(q_emb) == 0:
+        print("[pgvector_store] Query embedding returned empty – returning no results.")
+        return []
 
+    vector = q_emb[0].tolist()
+    print(f"[pgvector_store] Query embedded. Vector length: {len(vector)}")
+
+    # 2. Call the match_chunks RPC
     sb = _get_service_client()
+
+    # Log which key type is being used
+    key_used = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    if key_used:
+        print("[pgvector_store] Using SERVICE_ROLE_KEY for RPC call.")
+    else:
+        print("[pgvector_store] WARNING: No SERVICE_ROLE_KEY – using anon key. RLS may block.")
+
     try:
         resp = sb.rpc(
             "match_chunks",
@@ -148,12 +162,23 @@ def search_chunks(question: str, top_k: int = 5) -> List[Dict[str, Any]]:
                 "filter_doc_id":   None,
             },
         ).execute()
+
+        print(f"[pgvector_store] RPC response: {len(resp.data or [])} rows returned.")
+
+        if not resp.data:
+            print("[pgvector_store] RPC returned empty data. Possible causes:")
+            print("  - document_chunks table is empty (documents not indexed yet)")
+            print("  - match_chunks function has wrong vector dimension")
+            print("  - RLS policy blocking reads with current key")
+            return []
+
     except Exception as exc:
-        print(f"[pgvector_store] match_chunks RPC failed: {exc}")
+        print(f"[pgvector_store] match_chunks RPC FAILED: {exc}")
+        print(f"[pgvector_store] Full error type: {type(exc).__name__}")
         return []
 
     results = []
-    for row in (resp.data or []):
+    for row in resp.data:
         results.append({
             "chunk":            row.get("chunk_text", ""),
             "title":            row.get("title", ""),
@@ -164,5 +189,6 @@ def search_chunks(question: str, top_k: int = 5) -> List[Dict[str, Any]]:
             "chunk_index":      row.get("chunk_index", 0),
         })
 
-    print(f"[pgvector_store] search returned {len(results)} chunks for query.")
+    print(f"[pgvector_store] Returning {len(results)} chunks for query.")
     return results
+
