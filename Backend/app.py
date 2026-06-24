@@ -12,7 +12,7 @@ import joblib
 print("APP START")
 
 from rag.generator import answer_question
-from rag.retriever import build_index, add_document, remove_document
+from rag.retriever import build_index, add_document, remove_document, rebuild_index
 
 print("MODULES LOADED")
 
@@ -99,6 +99,13 @@ def index_document(data: DocIdRequest):
 def remove_document_endpoint(data: DocIdRequest):
     """Remove a single document's chunks from Supabase pgvector."""
     result = remove_document(data.doc_id)
+    return {"status": "ok", **result}
+
+
+@app.post("/reindex-documents", tags=["RAG Chat"])
+def reindex_documents():
+    """Rebuild all persisted pgvector chunks from Supabase documents."""
+    result = rebuild_index()
     return {"status": "ok", **result}
 
 

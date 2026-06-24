@@ -123,7 +123,11 @@ def delete_document_chunks(doc_id: str) -> int:
     return deleted
 
 
-def search_chunks(question: str, top_k: int = 5) -> List[Dict[str, Any]]:
+def search_chunks(
+    question: str,
+    top_k: int = 5,
+    filter_doc_id: str | None = None,
+) -> List[Dict[str, Any]]:
     """
     Embed *question*, call the Supabase match_chunks RPC, and return
     up to *top_k* results as:
@@ -159,7 +163,7 @@ def search_chunks(question: str, top_k: int = 5) -> List[Dict[str, Any]]:
             {
                 "query_embedding": vector,
                 "match_count":     top_k,
-                "filter_doc_id":   None,
+                "filter_doc_id":   filter_doc_id,
             },
         ).execute()
 
@@ -191,4 +195,3 @@ def search_chunks(question: str, top_k: int = 5) -> List[Dict[str, Any]]:
 
     print(f"[pgvector_store] Returning {len(results)} chunks for query.")
     return results
-

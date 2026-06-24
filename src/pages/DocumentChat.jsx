@@ -122,9 +122,9 @@ export default function DocumentChat() {
                                                             )}
                                                             <div className="chat-source-score">
                                                                 ✦ Similarity:{" "}
-                                                                {typeof source.score === "number"
-                                                                    ? source.score.toFixed(4)
-                                                                    : source.score}
+                                                                {typeof source.similarity === "number"
+                                                                    ? source.similarity.toFixed(4)
+                                                                    : source.similarity}
                                                             </div>
                                                             <p className="chat-source-text">
                                                                 {source.chunk?.substring(0, 300)}…

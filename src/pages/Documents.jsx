@@ -176,6 +176,33 @@ function Documents() {
     setTimeout(() => setToast(null), 3500);
   }
 
+  async function syncRagIndex(docId, action = "index") {
+    if (!docId) return;
+
+    const endpoint = action === "remove" ? "/remove-document" : "/index-document";
+    const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ doc_id: docId }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || `RAG ${action} request failed`);
+    }
+
+    const result = await response.json();
+    if (result.status !== "ok") {
+      throw new Error(result.error || `RAG ${action} request failed`);
+    }
+
+    if (action === "index" && Number(result.added_chunks || 0) === 0) {
+      throw new Error("No text chunks were indexed for this file");
+    }
+
+    return result;
+  }
+
   function closeViewer() {
     setViewerOpen(false);
     setTextContent(null);
@@ -240,6 +267,13 @@ function Documents() {
 
       const { data: { user } } = await supabase.auth.getUser();
       await logAudit(user.id, "EDIT", "DOCUMENT", editingDoc.id, `Edited document "${title}"`);
+
+      try {
+        await syncRagIndex(editingDoc.id);
+      } catch (err) {
+        console.error(err);
+        showToast("Document saved, but chat index update failed", "error");
+      }
 
       showToast("Document updated");
       fetchDocuments();
@@ -307,15 +341,15 @@ function Documents() {
       setDescription("");
       setFile(null);
 
-      showToast("Document uploaded successfully!");
-      fetchDocuments();
+      try {
+        await syncRagIndex(docData?.id);
+        showToast("Document uploaded and indexed for chat");
+      } catch (err) {
+        console.error(err);
+        showToast("Uploaded, but chat indexing failed", "error");
+      }
 
-      // Auto-embed new document for the RAG chatbot
-      fetch(`${import.meta.env.VITE_API_URL}/index-document`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ doc_id: docData?.id }),
-      }).catch(() => {});
+      fetchDocuments();
     } catch (err) {
       console.error(err);
       showToast("Upload failed", "error");
@@ -363,17 +397,17 @@ function Documents() {
         `Uploaded v${versionDoc.version + 1} of "${versionDoc.title}"`
       );
 
-      showToast("Version uploaded");
+      try {
+        await syncRagIndex(versionDoc.id);
+        showToast("Version uploaded and chat index refreshed");
+      } catch (err) {
+        console.error(err);
+        showToast("Version uploaded, but chat indexing failed", "error");
+      }
+
       fetchDocuments();
       setVersionDoc(null);
       setVersionFile(null);
-
-      // Re-index updated document for the RAG chatbot
-      fetch(`${import.meta.env.VITE_API_URL}/index-document`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ doc_id: versionDoc.id }),
-      }).catch(() => {});
     } catch (err) {
       console.error(err);
       showToast("Version upload failed", "error");
@@ -421,7 +455,14 @@ function Documents() {
         `Restored v${version.version_number} of "${historyDoc.title}" as v${historyDoc.version + 1}`
       );
 
-      showToast("Version restored");
+      try {
+        await syncRagIndex(historyDoc.id);
+        showToast("Version restored and chat index refreshed");
+      } catch (err) {
+        console.error(err);
+        showToast("Version restored, but chat indexing failed", "error");
+      }
+
       fetchDocuments();
       loadVersions(historyDoc);
     } catch (err) {
@@ -503,15 +544,15 @@ function Documents() {
     const { data: { user } } = await supabase.auth.getUser();
     await logAudit(user.id, "DELETE", "DOCUMENT", doc.id, `Deleted document "${doc.title}"`);
 
-    showToast("Document deleted");
-    fetchDocuments();
+    try {
+      await syncRagIndex(doc.id, "remove");
+      showToast("Document deleted");
+    } catch (err) {
+      console.error(err);
+      showToast("Document deleted, but chat index cleanup failed", "error");
+    }
 
-    // Remove deleted document from the RAG chatbot index
-    fetch(`${import.meta.env.VITE_API_URL}/remove-document`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ doc_id: doc.id }),
-    }).catch(() => {});
+    fetchDocuments();
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
