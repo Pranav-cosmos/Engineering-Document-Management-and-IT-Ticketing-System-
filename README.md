@@ -115,15 +115,6 @@ Scikit-Learn      Gemini Embeddings
 
 ---
 
-## Clone Repository
-
-```bash
-git clone <repository-url>
-cd <repository-name>
-```
-
----
-
 ## Database Setup
 
 Enable the **pgvector** extension from the Supabase Dashboard.
@@ -136,14 +127,6 @@ Execute the SQL migration scripts located in the project:
 These scripts create the required database schema, Row Level Security policies, and vector search functions.
 
 ---
-
-## Backend Setup
-
-```bash
-cd edms-client/Backend
-
-python -m venv venv
-```
 
 ## Project Structure
 
@@ -173,15 +156,6 @@ Backend/
 * Approval workflows for engineering documents.
 * Analytics dashboard.
 * Notification and email integration.
-
----
-
-## Notes
-
-* Never commit `.env` files or API keys.
-* The backend uses the Supabase Service Role Key for document indexing and vector search.
-* Uploaded documents are automatically chunked, embedded, and indexed into Supabase pgvector, making them immediately searchable without rebuilding a local vector database.
-* If the ticket categorization model is retrained, replace `models/category_pipeline.pkl` with the updated model.
 
 ---
 
